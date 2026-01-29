@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>LiveOIBench Leaderboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="icon" type="image/x-icon" href="static/images/whitebackground.ico">
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+  <link rel="stylesheet" href="static/css/leaderboard.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+  <style>
+    /* Sortable column styles */
+    .sortable {
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .sortable:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .sort-indicators {
+      display: inline-block;
+      position: relative;
+      width: 12px;
+      height: 24px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .sort-up, .sort-down {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #ccc;
+      transition: color 0.2s ease;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .sort-up {
+      top: 2px;
+    }
+
+    .sort-down {
+      bottom: 2px;
+    }
+
+    .sort-up.active, .sort-down.active {
+      color: #333;
+    }
+
+    .sortable:hover .sort-up:not(.active),
+    .sortable:hover .sort-down:not(.active) {
+      color: #999;
+    }
+
+    /* Table header styles */
+    .table th {
+      padding: 0.5em 0.75em;
+      text-align: center;
+    }
+
+    .table td {
+      padding: 0.5em 0.75em;
+      vertical-align: middle;
+    }
+
+    /* Competition tab styles */
+    .competition-tab {
+      padding: 0.4rem 0.8rem !important;
+      font-size: 0.9rem !important;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Hero Section -->
+  <section class="hero is-light" style="padding: 1.5rem 0;">
+    <div class="hero-body" style="padding: 1rem 1.5rem;">
+      <div class="container is-max-desktop">
+        <!-- Back to Home Button (Top Left) -->
+        <div class="has-text-left mb-3">
+          <a class="button is-dark is-rounded" href="index.html">
+            <span class="icon">
+              <i class="fas fa-arrow-left"></i>
+            </span>
+          </a>
+        </div>
+        
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-2 publication-title" style="margin-bottom: 0;">LiveOIBench Leaderboard</h1>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding: 0.75rem 1.25rem;">
+    <div class="container is-max-desktop">
+      <div class="box" style="padding: 1.25rem;">
+        <h3 class="title is-5 has-text-centered mb-3" style="font-size: 1.15rem; margin-bottom: 0.75rem;">Select Competitions</h3>
+        <div class="field">
+          <div class="control has-text-centered mb-3">
+            <button class="button is-dark is-rounded" id="toggleAll" style="font-size: 0.9rem; padding: 0.4rem 1.25rem;">Select All</button>
+          </div>
+          <div class="competition-tabs" style="gap: 0.4rem;">
+            <!-- Competition tabs will be dynamically added here by JavaScript -->
+          </div>
+          <div class="mt-4">
+            <div class="date-range-container">
+              <div class="date-range-slider">
+                <input type="range" id="startDateSlider" min="0" max="35" value="0" step="1">
+                <input type="range" id="endDateSlider" min="0" max="35" value="35" step="1">
+              </div>
+              <div class="date-range-labels has-text-centered">
+                <span id="dateRangeDisplay" class="is-size-5" style="font-size: 1rem; line-height: 1.35;"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="box" style="padding: 1.25rem; margin-bottom: 0.75rem;">
+    <h3 class="title is-5 has-text-centered mb-3" style="font-size: 1.15rem; margin-bottom: 0.75rem;">Select Model Categories</h3>
+    <div class="model-category-tabs" style="gap: 1.3rem;">
+      <div class="model-category-tab is-active" data-category="proprietary" style="padding: 0.6rem 1rem;">
+        <span class="category-name" style="font-size: 1rem;">Proprietary Models</span>
+      </div>
+      <div class="model-category-tab is-active" data-category="open-weight-thinking" style="padding: 0.6rem 1rem;">
+        <span class="category-name" style="font-size: 1rem;">Open Models: Thinking</span>
+      </div>
+      <div class="model-category-tab is-active" data-category="open-weight-non-thinking" style="padding: 0.6rem 1rem;">
+        <span class="category-name" style="font-size: 1rem;">Open Models: Non-Thinking</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaderboard Table Section -->
+  <section class="section">
+    <div class="container is-max-desktop">
+      <div class="box">
+        <h3 class="title is-4 has-text-centered mb-4">Model Rankings</h3>
+        <div class="table-container">
+          <table id="rankingTable" class="table is-striped is-fullwidth is-hoverable">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Rank</th>
+                <th>Model</th>
+                <th>Gold 🥇</th>
+                <th>Silver 🥈</th>
+                <th>Bronze 🥉</th>
+                <th>Total</th>
+                <th>Pass Rate</th>
+                <th>Relative Score</th>
+                <th>Human Percentile</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Filled dynamically by leaderboard.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Back Button -->
+  <section class="section">
+    <div class="container is-max-desktop has-text-centered">
+      <a class="button is-dark is-rounded" href="index.html">
+        <span class="icon">
+          <i class="fas fa-arrow-left"></i>
+        </span>
+        <span>Back to Home</span>
+      </a>
+    </div>
+  </section>
+
+
+  <!-- Link to external scripts -->
+  <script src="static/js/competition-config.js?v=1"></script>
+  <script src="static/js/model-config.js?v=1"></script>
+  <script src="static/js/leaderboard.js?v=6"></script>
+</body>
+</html>
